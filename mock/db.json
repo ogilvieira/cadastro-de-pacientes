@@ -1,0 +1,13 @@
+{
+  "users": [
+    {
+      "email": "gil.vieira@om30.com.br",
+      "password": "$2a$10$MrjrThnaBXd0aee0eQwhz.drBt7y33UfboQYMNRMlmU2xLRW7Tc3m",
+      "firstname": "Gil",
+      "lastname": "Vieira",
+      "id": 1
+    }
+  ],
+  "patients": [],
+  "address": []
+}
