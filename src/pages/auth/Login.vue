@@ -73,8 +73,11 @@
     </v-sheet>
   </div>
 </template>
+
 <script>
   import authFormSchema from "@/schema/authForm";
+  import { useAuthStore } from "@/stores/authStore";
+  const authStore = useAuthStore();
 
   export default {
     name: 'Login',
@@ -105,6 +108,17 @@
       async sendData() {
         if(this.isFetching){ return; }
         this.isFetching = true;
+
+        try {
+          const userData = await authStore.login(this.values.email, this.values.password);
+          if( userData.user && userData.accessToken ) {
+            this.$router.push('/')
+          }
+        } catch (err) {
+          console.error(err);
+          this.fetchErrorText = typeof err === 'string' ? err : 'Erro ao tentar realizar o login. Tente novamente.';
+        };
+        this.isFetching = false;
       },
       validate(field) {
         authFormSchema
@@ -116,6 +130,11 @@
             this.errors[field] = err.message;
           });
       },
+    },
+    created() {
+      if( authStore.isLoggedIn ) {
+        this.$router.push('/')
+      }
     }
   }
 </script>

@@ -8,6 +8,13 @@
       "id": 1
     }
   ],
-  "patients": [],
+  "patients": [
+    {
+      "id": 1,
+      "name": "Gil Vieira",
+      "cns": 2329390232,
+      "cpf": 33333333300
+    }
+  ],
   "address": []
 }
