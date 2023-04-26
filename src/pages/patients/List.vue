@@ -63,11 +63,6 @@
         </v-list-item>
       </v-list>
     </v-card>
-    <v-card v-else-if="query && !patients.length && !isFetching">
-      <v-alert type="info">
-        <p>Nenhum encontrado.</p>
-      </v-alert>
-    </v-card>
 
     <v-card v-if="!query && !patients.length">
       <v-alert type="warning" variant="outlined">
@@ -80,7 +75,7 @@
 </template>
 <script>
   import ApiPrivate from '@/ApiPrivate';
-
+  
   export default {
     data: () => ({
       isFetching: false,
@@ -120,7 +115,6 @@
           this.fetchData();
         }, 700);
       }
-
     }
   }
 </script>

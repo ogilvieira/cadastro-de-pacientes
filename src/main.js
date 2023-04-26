@@ -9,13 +9,17 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { VDataTable } from 'vuetify/labs/VDataTable'
 import colors from 'vuetify/lib/util/colors'
+import { vMaska } from "maska"
 
 const vuetify = createVuetify({
   components: {
     ...components,
     VDataTable
   },
-  directives,
+  directives: {
+    ...directives,
+    maska: vMaska
+  },
   theme: {
     defaultTheme: 'light',
     themes: {
