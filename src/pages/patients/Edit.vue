@@ -3,18 +3,20 @@
   <v-container>
     <v-row>
       <v-col>
-        <v-card class="px-4 py-4">
+        <v-card class="px-2 py-2">
           <v-card-title class="text-primary"><v-icon icon="mdi-account-circle"></v-icon> Dados Pessoais</v-card-title>
           <v-card-subtitle>Informações necessárias para identificação do paciente.</v-card-subtitle>
           <v-card-item>
 
-            <div v-if="photo" class="align-center py-5 d-flex flex-column">
-              <v-avatar image="https://dummyimage.com/150x150/444/ccc.jpg" color="primary" size="150"></v-avatar>
-              <v-btn class="mt-2" @click="() => photo = ''" variant="text" size="x-small"  >Remover</v-btn>
+            <div v-if="values.photo" class="align-center py-5 d-flex flex-column">
+              <v-avatar :image="values.photo" color="primary" size="150"></v-avatar>
+              <v-btn class="mt-2" @click="() => values.photo = ''" variant="text" size="x-small"  >Remover</v-btn>
             </div>
-            <div v-else class="align-center py-5 d-flex flex-column">
+            <div v-else class="align-center py-5 d-flex flex-column" @click="() => $refs.imageInput.click()">
               <v-btn prepend-icon="mdi-camera" size="large" color="primary">Adicionar Foto</v-btn>
             </div>
+
+            <input class="d-none" @change="getImage" required type="file" accept="image/*" name="photo" ref="imageInput" />
 
               <v-text-field 
                 v-model="values.fullname"
@@ -122,7 +124,7 @@
         </v-card>
       </v-col>
       <v-col>
-        <v-card class="px-4 py-4">
+        <v-card class="px-2 py-2">
           <v-card-title class="text-primary"><v-icon icon="mdi-mail"></v-icon> Endereço</v-card-title>
           <v-card-subtitle>Informações de residência do paciente.</v-card-subtitle>
 
@@ -136,6 +138,7 @@
               persistent-hint
               @blur="validate('zipcode')"
               @keyup="validate('zipcode')"
+              @change="getAddress()"
               :disabled="isFetching"
               >
               <input type="hidden" v-model="values.zipcode" v-maska data-maska="#####-###">
@@ -275,9 +278,15 @@
         </v-card>        
       </v-col>
     </v-row>
-    <v-row class="text-right">
+    <v-row v-if="fetchErrorText">
       <v-col>
-        <v-btn color="success" size="large" class="ml-3">Salvar Alterações</v-btn>
+        <v-alert type="error" :text="fetchErrorText" closable variant="tonal">
+        </v-alert>        
+      </v-col>
+    </v-row>
+    <v-row class="text-center">
+      <v-col>
+        <v-btn color="success" type="submit" size="large" class="ml-3">Salvar Alterações</v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -286,9 +295,12 @@
 <script>
   import patientSchema from '@/schema/patient';
   import listUF from '@/data/uf';
+  import ApiPrivate from '@/ApiPrivate';
+
   export default {
     data: () => ({
       isFetching: false,
+      fetchErrorText: "",
       values: {
         fullname: '',
         birthdate: '',
@@ -313,7 +325,90 @@
     },
     methods: {
       submitForm() {
-        console.info('submit', this.values);
+        this.fetchErrorText = '';
+        this.errors = {};
+        patientSchema.validate(this.values)
+          .then(() => {
+            this.sendData();
+          })
+          .catch(err => {
+            this.fetchErrorText = err.message ?? err;
+          })
+      },
+      async sendData() {
+        const values = { ...this.values };
+        ApiPrivate.post('/patients', values)
+          .then(res => {
+            console.log(res)
+          })
+          .catch(err => {
+            console.error(err);
+          })
+      },
+      async getAddress() {
+        fetch(`https://viacep.com.br/ws/${this.values.zipcode.replace(/\D/gi, '')}/json/`)
+          .then(res => res.json())
+          .then(data => {
+            const obj = {
+              address1: data?.logradouro,
+              address2: data?.complemento,
+              neighborhood: data?.bairro,
+              city: data?.localidade,
+              uf: data?.uf
+            }
+            
+            this.values = {
+              ...this.values,
+              ...obj
+            }
+
+          })
+          .catch(err => {
+            console.error(err);
+          })
+      },
+      getImage() {
+        if (this.$refs.imageInput.files) {
+            const imageFile = this.$refs.imageInput.files[0];
+            if(!imageFile){ return; }
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+              const img = document.createElement("img");
+              img.onload = () => {
+
+                const MAX_WIDTH = 300;
+                const MAX_HEIGHT = 300;
+
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height = height * (MAX_WIDTH / width);
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width = width * (MAX_HEIGHT / height);
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                const dataurl = canvas.toDataURL(imageFile.type);
+                
+                this.values.photo = dataurl;
+              }
+              img.src = e.target.result;
+            }
+
+            reader.readAsDataURL(imageFile);
+        }
       },
       validate(field) {
         patientSchema
