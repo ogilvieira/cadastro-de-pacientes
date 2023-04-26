@@ -84,15 +84,6 @@
       patients: [],
       timeountSubmit: null
     }),
-    computed: {
-      queryModes() {
-        return [
-          { title: 'Nome', value: 'name' },
-          { title: 'CPF', value: 'cpf' },
-          { title: 'CNS', value: 'cns' },
-        ]
-      }
-    },
     methods: {
       openDetail( id ) {
         console.log(id);
