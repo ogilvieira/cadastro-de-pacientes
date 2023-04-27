@@ -1,16 +1,16 @@
 <template>
-<v-form fast-fail @submit.prevent="submitForm">  
+<v-form fast-fail @submit.prevent="submitForm">
   <v-container>
     <v-row>
       <v-col>
         <v-card class="px-2 py-2">
-          <v-card-title class="text-primary"><v-icon icon="mdi-account-circle"></v-icon> Dados Pessoais</v-card-title>
+          <v-card-title class="text-primary"><v-icon icon="mdi-account-circle"></v-icon> Dados Pessoais {{ editMode }}</v-card-title>
           <v-card-subtitle>Informações necessárias para identificação do paciente.</v-card-subtitle>
           <v-card-item>
 
             <div v-if="values.photo" class="align-center py-5 d-flex flex-column">
               <v-avatar :image="values.photo" color="primary" size="150"></v-avatar>
-              <v-btn class="mt-2" @click="() => values.photo = ''" variant="text" size="x-small"  >Remover</v-btn>
+              <v-btn class="mt-2" @click="() => values.photo = ''" variant="text" size="x-small">Remover</v-btn>
             </div>
             <div v-else class="align-center py-5 d-flex flex-column" @click="() => $refs.imageInput.click()">
               <v-btn prepend-icon="mdi-camera" size="large" color="primary">Adicionar Foto</v-btn>
@@ -120,6 +120,10 @@
                   />
                 </template>
               </v-text-field>
+
+              <div v-if="editMode">
+                <v-btn color="error" variant="text" @click="removePatient()">Arquivar Paciente</v-btn>
+              </div>
           </v-card-item>
         </v-card>
       </v-col>
@@ -286,7 +290,10 @@
     </v-row>
     <v-row class="text-center">
       <v-col>
-        <v-btn color="success" type="submit" size="large" class="ml-3">Salvar Alterações</v-btn>
+        <v-btn :disabled="isFetching" color="error" size="large" class="ml-3" @click="$router.go(-1)">Cancelar</v-btn>
+      </v-col>
+      <v-col>
+        <v-btn :disabled="isFetching" color="success" type="submit" size="large" class="ml-3">Salvar Alterações</v-btn>
       </v-col>
     </v-row>
   </v-container>
@@ -321,9 +328,22 @@
     computed: {
       arrUfs() {
         return listUF.map(a => a.sigla);
+      },
+      editMode() {
+        return !!this.$route.params?.id;
       }
     },
     methods: {
+      async fetchData() {
+        this.isFetching = true;
+        try {
+          const patient = await ApiPrivate.get(`/patients/${this.$route.params.id}`);
+          this.values = patient;
+        } catch(err) {
+          console.error(err);
+        }
+        this.isFetching = false;
+      },
       submitForm() {
         this.fetchErrorText = '';
         this.errors = {};
@@ -337,9 +357,14 @@
       },
       async sendData() {
         const values = { ...this.values };
-        ApiPrivate.post('/patients', values)
+
+        ['cpf', 'cns', 'zipcode'].forEach(key => {
+          values[key] = values[key].replace(/\D/, '');
+        })
+
+        ApiPrivate[this.editMode ? 'put' : 'post']( this.editMode ? `/patients/${this.$route.params.id}` : '/patients', values)
           .then(res => {
-            console.log(res)
+            this.$router.push(`/patient/${res.id}`);
           })
           .catch(err => {
             console.error(err);
@@ -419,6 +444,25 @@
           .catch(err => {
             this.errors[field] = err.message;
           });
+      },
+      async removePatient() {
+        if(!this.editMode){ return; }
+        const confirm = window.prompt("Para arquivar o paciente digite: \"ARQUIVAR\" para confirmar:");
+        if(confirm !== "ARQUIVAR"){ return; }
+        
+        ApiPrivate.delete( `/patients/${this.$route.params.id}`)
+          .then(res => {
+            this.$router.push(`/`);
+          })
+          .catch(err => {
+            console.error(err);
+          })
+
+      }
+    },
+    created() {
+      if( this.$route.params?.id ) {
+        this.fetchData();
       }
     }
   }

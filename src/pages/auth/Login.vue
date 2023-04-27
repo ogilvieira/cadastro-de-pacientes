@@ -115,7 +115,6 @@
             this.$router.push('/')
           }
         } catch (err) {
-          console.error(err);
           this.fetchErrorText = typeof err === 'string' ? err : 'Erro ao tentar realizar o login. Tente novamente.';
         };
         this.isFetching = false;

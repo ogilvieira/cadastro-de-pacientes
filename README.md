@@ -1,35 +1,16 @@
 # desafio-om30-front-end-vuejs
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vitejs.dev/config/).
-
-## Project Setup
+## Para Rodar:
 
 ```sh
+// instalar dependências
 npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+//servir :5
 npm run dev
 ```
 
-### Compile and Minify for Production
-
-```sh
-npm run build
+## Login
 ```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-l
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
+user: gil.vieira@om30.com.br
+pass: blastoise
 ```

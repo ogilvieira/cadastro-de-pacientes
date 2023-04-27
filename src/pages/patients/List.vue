@@ -47,13 +47,13 @@
         <v-list-item
           v-for="(item) in patients"
           :key="item.id"
-          :title="item.name"
+          :title="item.fullname"
           :to="`/patient/${item.id}`"
-          :prepend-avatar="item.avatar"
+          :prepend-avatar="item.photo"
         >
 
         <template v-slot:title>
-          <div class="v-list-item-title text-primary">{{item.name}}</div>
+          <div class="v-list-item-title text-primary">{{item.fullname}}</div>
         </template>
 
         <template v-slot:subtitle>
@@ -75,7 +75,6 @@
 </template>
 <script>
   import ApiPrivate from '@/ApiPrivate';
-  
   export default {
     data: () => ({
       isFetching: false,
@@ -85,15 +84,12 @@
       timeountSubmit: null
     }),
     methods: {
-      openDetail( id ) {
-        console.log(id);
-      },
       async fetchData() {
         this.patients = [];
-        if(this.isFetching || !this.query){ return; }
+        if(this.isFetching){ return; }
         this.isFetching = true;
         
-        const patients = await ApiPrivate.get(`/patients?q=${this.query}&_page=1&_limit=10`);
+        const patients = await ApiPrivate.get(`/patients?${this.query ? 'q='+this.query+'&' : '' }_page=1&_limit=10`);
         this.patients = patients;
 
         this.isFetching = false;
@@ -106,6 +102,9 @@
           this.fetchData();
         }, 700);
       }
+    },
+    created() {
+      this.fetchData();
     }
   }
 </script>
